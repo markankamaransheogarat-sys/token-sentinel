@@ -18,26 +18,74 @@ pub struct PhantomScanner {
 impl PhantomScanner {
     pub fn new() -> Self {
         let py_stdlib = [
-            "os", "sys", "re", "math", "time", "datetime", "json", "typing", "collections",
-            "itertools", "functools", "pathlib", "subprocess", "hashlib", "random", "logging",
-            "urllib", "http", "socket", "asyncio", "threading", "multiprocessing", "abc",
-            "contextlib", "dataclasses", "enum", "io", "copy", "struct", "shutil", "tempfile",
-            "unittest", "argparse", "traceback", "gc", "warnings", "inspect", "uuid", "base64",
+            "os",
+            "sys",
+            "re",
+            "math",
+            "time",
+            "datetime",
+            "json",
+            "typing",
+            "collections",
+            "itertools",
+            "functools",
+            "pathlib",
+            "subprocess",
+            "hashlib",
+            "random",
+            "logging",
+            "urllib",
+            "http",
+            "socket",
+            "asyncio",
+            "threading",
+            "multiprocessing",
+            "abc",
+            "contextlib",
+            "dataclasses",
+            "enum",
+            "io",
+            "copy",
+            "struct",
+            "shutil",
+            "tempfile",
+            "unittest",
+            "argparse",
+            "traceback",
+            "gc",
+            "warnings",
+            "inspect",
+            "uuid",
+            "base64",
         ]
         .iter()
         .copied()
         .collect();
 
-        let rs_stdlib = [
-            "std", "core", "alloc", "crate", "super", "self",
-        ]
-        .iter()
-        .copied()
-        .collect();
+        let rs_stdlib = ["std", "core", "alloc", "crate", "super", "self"]
+            .iter()
+            .copied()
+            .collect();
 
         let js_stdlib = [
-            "fs", "path", "http", "https", "url", "crypto", "os", "util", "events", "stream",
-            "buffer", "child_process", "net", "tls", "dns", "assert", "zlib", "perf_hooks",
+            "fs",
+            "path",
+            "http",
+            "https",
+            "url",
+            "crypto",
+            "os",
+            "util",
+            "events",
+            "stream",
+            "buffer",
+            "child_process",
+            "net",
+            "tls",
+            "dns",
+            "assert",
+            "zlib",
+            "perf_hooks",
         ]
         .iter()
         .copied()
@@ -73,7 +121,16 @@ impl PhantomScanner {
             // 1. Python imports
             if trimmed.starts_with("import ") {
                 let pkg_part = trimmed.trim_start_matches("import ").trim();
-                let pkg = pkg_part.split(',').next().unwrap_or(pkg_part).split('.').next().unwrap_or(pkg_part).split_whitespace().next().unwrap_or("");
+                let pkg = pkg_part
+                    .split(',')
+                    .next()
+                    .unwrap_or(pkg_part)
+                    .split('.')
+                    .next()
+                    .unwrap_or(pkg_part)
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("");
                 self.check_package("python", pkg, trimmed, &self.py_stdlib, &mut warnings);
             } else if trimmed.starts_with("from ") && trimmed.contains(" import ") {
                 let parts: Vec<&str> = trimmed.split_whitespace().collect();
@@ -81,34 +138,69 @@ impl PhantomScanner {
                     let full_pkg = parts[1];
                     let root_pkg = full_pkg.split('.').next().unwrap_or(full_pkg);
                     if !root_pkg.starts_with('.') {
-                        self.check_package("python", root_pkg, trimmed, &self.py_stdlib, &mut warnings);
+                        self.check_package(
+                            "python",
+                            root_pkg,
+                            trimmed,
+                            &self.py_stdlib,
+                            &mut warnings,
+                        );
                     }
                 }
             }
 
             // 2. JavaScript / TypeScript imports
-            if (trimmed.starts_with("import ") || trimmed.starts_with("import{") || trimmed.starts_with("import {")) && trimmed.contains("from ") {
+            if (trimmed.starts_with("import ")
+                || trimmed.starts_with("import{")
+                || trimmed.starts_with("import {"))
+                && trimmed.contains("from ")
+            {
                 if let Some(quote_start) = trimmed.find("from ") {
                     let from_part = &trimmed[quote_start + 5..].trim();
-                    let clean_from = from_part.trim_matches(|c| c == '\'' || c == '"' || c == ';' || c == ' ');
-                    if !clean_from.starts_with('.') && !clean_from.starts_with('/') && !clean_from.starts_with('@') {
+                    let clean_from =
+                        from_part.trim_matches(|c| c == '\'' || c == '"' || c == ';' || c == ' ');
+                    if !clean_from.starts_with('.')
+                        && !clean_from.starts_with('/')
+                        && !clean_from.starts_with('@')
+                    {
                         let root_pkg = clean_from.split('/').next().unwrap_or(clean_from);
-                        self.check_package("javascript/typescript", root_pkg, trimmed, &self.js_stdlib, &mut warnings);
+                        self.check_package(
+                            "javascript/typescript",
+                            root_pkg,
+                            trimmed,
+                            &self.js_stdlib,
+                            &mut warnings,
+                        );
                     }
                 }
             } else if trimmed.contains("require(") {
                 if let Some(start) = trimmed.find("require(") {
                     let sub = &trimmed[start + 8..];
-                    let clean = sub.split(')').next().unwrap_or("").trim_matches(|c| c == '\'' || c == '"' || c == ' ');
+                    let clean = sub
+                        .split(')')
+                        .next()
+                        .unwrap_or("")
+                        .trim_matches(|c| c == '\'' || c == '"' || c == ' ');
                     if !clean.starts_with('.') && !clean.starts_with('/') {
                         let root_pkg = clean.split('/').next().unwrap_or(clean);
-                        self.check_package("javascript/typescript", root_pkg, trimmed, &self.js_stdlib, &mut warnings);
+                        self.check_package(
+                            "javascript/typescript",
+                            root_pkg,
+                            trimmed,
+                            &self.js_stdlib,
+                            &mut warnings,
+                        );
                     }
                 }
             }
 
             // 3. Rust crate imports
-            if trimmed.starts_with("use ") && !trimmed.starts_with("use std") && !trimmed.starts_with("use crate") && !trimmed.starts_with("use super") && !trimmed.starts_with("use self") {
+            if trimmed.starts_with("use ")
+                && !trimmed.starts_with("use std")
+                && !trimmed.starts_with("use crate")
+                && !trimmed.starts_with("use super")
+                && !trimmed.starts_with("use self")
+            {
                 let sub = trimmed.trim_start_matches("use ").trim();
                 let root_crate = sub.split("::").next().unwrap_or("").trim_matches(';');
                 if !root_crate.is_empty() && !self.rs_stdlib.contains(root_crate) {
@@ -153,5 +245,11 @@ impl PhantomScanner {
                 pkg_clean
             ),
         });
+    }
+}
+
+impl Default for PhantomScanner {
+    fn default() -> Self {
+        Self::new()
     }
 }

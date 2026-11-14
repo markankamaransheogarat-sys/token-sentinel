@@ -75,7 +75,10 @@ class OrderProcessingPipeline:
     };
 
     let reply1 = "The pool is clean, but make sure to add connection health checks on acquire.";
-    let (_, report1) = sentinel.process_turn(req1, Some(reply1)).await.expect("Turn 1 failed");
+    let (_, report1) = sentinel
+        .process_turn(req1, Some(reply1))
+        .await
+        .expect("Turn 1 failed");
     print!("{}", TerminalHud::format_turn_report(&report1));
 
     // ---------------------------------------------------------
@@ -105,7 +108,9 @@ class OrderProcessingPipeline:
             },
             ChatMessage {
                 role: "user".to_string(),
-                content: format!("Here is the file again:\n{heavy_code_file}\nPlease add a rate limiter!"),
+                content: format!(
+                    "Here is the file again:\n{heavy_code_file}\nPlease add a rate limiter!"
+                ),
                 name: None,
             },
         ],
@@ -125,12 +130,18 @@ def apply_rate_limit():
     return limiter
 ```"#;
 
-    let (_, report2) = sentinel.process_turn(req2, Some(reply2)).await.expect("Turn 2 failed");
+    let (_, report2) = sentinel
+        .process_turn(req2, Some(reply2))
+        .await
+        .expect("Turn 2 failed");
     print!("{}", TerminalHud::format_turn_report(&report2));
 
     // ---------------------------------------------------------
     // Cumulative Telemetry & Savings
     // ---------------------------------------------------------
     let final_telemetry = sentinel.get_telemetry();
-    print!("{}", TerminalHud::format_cumulative_telemetry(&final_telemetry));
+    print!(
+        "{}",
+        TerminalHud::format_cumulative_telemetry(&final_telemetry)
+    );
 }

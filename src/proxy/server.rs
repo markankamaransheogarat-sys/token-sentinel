@@ -1,8 +1,12 @@
+use crate::guard::{
+    BudgetConfig, BudgetError, BudgetGuard, SentinelMetrics, SentinelTelemetryReport,
+};
+use crate::models::{
+    ChatChoice, ChatCompletionRequest, ChatCompletionResponse, ChatMessage, PricingRegistry, Usage,
+};
+use crate::optimizer::{ContextDeduplicator, PhantomScanner, PhantomWarning};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::models::{ChatCompletionRequest, ChatCompletionResponse, ChatChoice, ChatMessage, Usage, PricingRegistry};
-use crate::optimizer::{ContextDeduplicator, PhantomScanner, PhantomWarning};
-use crate::guard::{BudgetGuard, BudgetConfig, BudgetError, SentinelMetrics, SentinelTelemetryReport};
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct TurnInspectionReport {
@@ -54,7 +58,9 @@ impl TokenSentinel {
         let model = req.model.clone();
 
         // 1. Initial Token Estimation & Budget Pre-Check
-        let raw_prompt_tokens: usize = req.messages.iter()
+        let raw_prompt_tokens: usize = req
+            .messages
+            .iter()
             .map(|m| ContextDeduplicator::estimate_tokens(&m.content))
             .sum();
 
@@ -82,7 +88,9 @@ impl TokenSentinel {
         let phantom_warnings = self.phantom_scanner.scan_code(reply_text);
 
         // 5. Cost Calculation & Telemetry
-        let actual_spent_usd = self.pricing.calculate_cost(&model, optimized_prompt_tokens, completion_tokens);
+        let actual_spent_usd =
+            self.pricing
+                .calculate_cost(&model, optimized_prompt_tokens, completion_tokens);
         let actual_saved_usd = self.pricing.calculate_cost(&model, tokens_saved, 0);
 
         {

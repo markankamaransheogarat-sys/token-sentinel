@@ -46,10 +46,14 @@ impl SentinelMetrics {
         warnings_count: usize,
     ) {
         self.total_requests.fetch_add(1, Ordering::Relaxed);
-        self.total_prompt_tokens.fetch_add(prompt_tokens as u64, Ordering::Relaxed);
-        self.total_completion_tokens.fetch_add(completion_tokens as u64, Ordering::Relaxed);
-        self.total_tokens_saved.fetch_add(saved_tokens as u64, Ordering::Relaxed);
-        self.phantom_warnings.fetch_add(warnings_count as u64, Ordering::Relaxed);
+        self.total_prompt_tokens
+            .fetch_add(prompt_tokens as u64, Ordering::Relaxed);
+        self.total_completion_tokens
+            .fetch_add(completion_tokens as u64, Ordering::Relaxed);
+        self.total_tokens_saved
+            .fetch_add(saved_tokens as u64, Ordering::Relaxed);
+        self.phantom_warnings
+            .fetch_add(warnings_count as u64, Ordering::Relaxed);
 
         if let Ok(mut spent) = self.cost_spent.lock() {
             *spent += spent_usd;
@@ -83,5 +87,11 @@ impl SentinelMetrics {
             total_saved_usd: saved,
             phantom_warnings_count: self.phantom_warnings.load(Ordering::Relaxed),
         }
+    }
+}
+
+impl Default for SentinelMetrics {
+    fn default() -> Self {
+        Self::new()
     }
 }

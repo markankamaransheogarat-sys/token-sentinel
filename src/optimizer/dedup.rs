@@ -1,6 +1,6 @@
+use crate::models::protocol::ChatMessage;
 use std::collections::HashSet;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use crate::models::protocol::ChatMessage;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct DedupResult {
@@ -72,7 +72,11 @@ impl ContextDeduplicator {
                     }
 
                     let code_end = i;
-                    let fence_footer = if code_end < lines.len() { lines[code_end] } else { "```" };
+                    let fence_footer = if code_end < lines.len() {
+                        lines[code_end]
+                    } else {
+                        "```"
+                    };
 
                     if code_lines.len() >= self.min_block_lines {
                         let block_hash = Self::hash_block(&code_lines);

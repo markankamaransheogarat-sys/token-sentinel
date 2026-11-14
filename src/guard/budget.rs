@@ -22,10 +22,19 @@ pub enum BudgetError {
 impl std::fmt::Display for BudgetError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::SessionBudgetExceeded { current_spent, limit } => {
-                write!(f, "Session budget limit exceeded! Spent: ${current_spent:.4}, Limit: ${limit:.2}")
+            Self::SessionBudgetExceeded {
+                current_spent,
+                limit,
+            } => {
+                write!(
+                    f,
+                    "Session budget limit exceeded! Spent: ${current_spent:.4}, Limit: ${limit:.2}"
+                )
             }
-            Self::RequestBudgetExceeded { estimated_cost, limit } => {
+            Self::RequestBudgetExceeded {
+                estimated_cost,
+                limit,
+            } => {
                 write!(f, "Single request estimated cost (${estimated_cost:.4}) exceeds limit (${limit:.2})")
             }
         }

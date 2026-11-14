@@ -13,7 +13,8 @@ fn test_phantom_package_detection() {
     assert_eq!(warnings[0].language, "python");
 
     // Rust code with std, manifest (tokio), and 1 hallucinated crate
-    let rs_code = "use std::sync::Arc;\nuse tokio::net::TcpStream;\nuse magic_crypto_cipher::Decryptor;\n";
+    let rs_code =
+        "use std::sync::Arc;\nuse tokio::net::TcpStream;\nuse magic_crypto_cipher::Decryptor;\n";
     let rs_warnings = scanner.scan_code(rs_code);
 
     assert_eq!(rs_warnings.len(), 1);

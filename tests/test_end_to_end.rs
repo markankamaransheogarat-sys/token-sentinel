@@ -1,6 +1,4 @@
-use token_sentinel::{
-    BudgetConfig, ChatCompletionRequest, ChatMessage, TokenSentinel,
-};
+use token_sentinel::{BudgetConfig, ChatCompletionRequest, ChatMessage, TokenSentinel};
 
 #[tokio::test]
 async fn test_end_to_end_sentinel_workflow() {
@@ -43,7 +41,10 @@ async fn test_end_to_end_sentinel_workflow() {
     assert_eq!(resp.model, "gpt-4o");
     assert!(report.tokens_saved > 0);
     assert_eq!(report.phantom_warnings.len(), 1);
-    assert_eq!(report.phantom_warnings[0].package_name, "non_existent_super_lib");
+    assert_eq!(
+        report.phantom_warnings[0].package_name,
+        "non_existent_super_lib"
+    );
 
     let tele = sentinel.get_telemetry();
     assert_eq!(tele.total_requests, 1);
